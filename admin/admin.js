@@ -47,7 +47,7 @@ const totalDisponibles =
 
 
 // ==============================
-// SUPABASE REQUEST
+// HEADERS
 // ==============================
 
 function headersSesion(accessToken) {
@@ -77,13 +77,11 @@ loginForm.addEventListener(
     btnLogin.textContent =
       "Ingresando...";
 
-
     const email =
       emailInput.value.trim();
 
     const password =
       passwordInput.value;
-
 
     try {
 
@@ -106,10 +104,8 @@ loginForm.addEventListener(
           }
         );
 
-
       const datos =
         await respuesta.json();
-
 
       if (!respuesta.ok) {
 
@@ -120,26 +116,18 @@ loginForm.addEventListener(
 
       }
 
-
       const accessToken =
         datos.access_token;
 
-
-      // Guardamos temporalmente
-      // la sesión del administrador
       sessionStorage.setItem(
         "admin_access_token",
         accessToken
       );
 
-
-      // Comprobar que realmente
-      // es administrador
       const esAdmin =
         await comprobarAdministrador(
           accessToken
         );
-
 
       if (!esAdmin) {
 
@@ -153,17 +141,13 @@ loginForm.addEventListener(
 
       }
 
-
-      // Mostrar panel
       login.classList.add("oculto");
 
       panel.classList.remove("oculto");
 
-
       await cargarFechas(
         accessToken
       );
-
 
     } catch (error) {
 
@@ -199,17 +183,14 @@ async function comprobarAdministrador(
       }
     );
 
-
   if (!respuesta.ok) {
 
     return false;
 
   }
 
-
   const admins =
     await respuesta.json();
-
 
   return admins.length > 0;
 
@@ -231,10 +212,11 @@ async function cargarFechas(
         `${SUPABASE_URL}/rest/v1/horarios?select=fecha&activo=eq.true&order=fecha.asc`,
         {
           headers:
-            headersSesion(accessToken)
+            headersSesion(
+              accessToken
+            )
         }
       );
-
 
     if (!respuesta.ok) {
 
@@ -244,10 +226,8 @@ async function cargarFechas(
 
     }
 
-
     const datos =
       await respuesta.json();
-
 
     const fechas =
       [
@@ -258,12 +238,10 @@ async function cargarFechas(
         )
       ];
 
-
     fechaAdmin.innerHTML =
       `<option value="">
         Selecciona una fecha
       </option>`;
-
 
     fechas.forEach(
       fecha => {
@@ -288,7 +266,6 @@ async function cargarFechas(
       }
     );
 
-
   } catch (error) {
 
     mostrarError(
@@ -311,7 +288,6 @@ fechaAdmin.addEventListener(
     const fecha =
       fechaAdmin.value;
 
-
     if (!fecha) {
 
       reservasContainer.innerHTML =
@@ -329,12 +305,10 @@ fechaAdmin.addEventListener(
 
     }
 
-
     const accessToken =
       sessionStorage.getItem(
         "admin_access_token"
       );
-
 
     await cargarReservas(
       fecha,
@@ -359,10 +333,8 @@ async function cargarReservas(
       Cargando reservas...
     </p>`;
 
-
   try {
 
-    // Horarios disponibles
     const respuestaHorarios =
       await fetch(
         `${SUPABASE_URL}/rest/v1/horarios?select=hora_inicio,hora_fin&fecha=eq.${fecha}&activo=eq.true&order=hora_inicio.asc`,
@@ -374,7 +346,6 @@ async function cargarReservas(
         }
       );
 
-
     if (!respuestaHorarios.ok) {
 
       throw new Error(
@@ -383,12 +354,10 @@ async function cargarReservas(
 
     }
 
-
     const horarios =
       await respuestaHorarios.json();
 
 
-    // Reservas
     const respuestaReservas =
       await fetch(
         `${SUPABASE_URL}/rest/v1/reservas?select=id,nombre,correo,telefono,fecha,hora&fecha=eq.${fecha}&order=hora.asc`,
@@ -400,7 +369,6 @@ async function cargarReservas(
         }
       );
 
-
     if (!respuestaReservas.ok) {
 
       throw new Error(
@@ -409,7 +377,6 @@ async function cargarReservas(
 
     }
 
-
     const reservas =
       await respuestaReservas.json();
 
@@ -417,10 +384,8 @@ async function cargarReservas(
     reservasContainer.innerHTML =
       "";
 
-
     totalReservas.textContent =
       reservas.length;
-
 
     totalDisponibles.textContent =
       horarios.length -
@@ -453,6 +418,10 @@ async function cargarReservas(
           );
 
 
+        // ==============================
+        // HORARIO OCUPADO
+        // ==============================
+
         if (reserva) {
 
           const card =
@@ -483,7 +452,46 @@ async function cargarReservas(
               <strong>Teléfono:</strong>
               ${escapeHTML(reserva.telefono)}
             </p>
+
+            <button
+              class="btn-cancelar"
+              data-id="${reserva.id}"
+            >
+              ❌ Cancelar reserva
+            </button>
           `;
+
+
+          const botonCancelar =
+            card.querySelector(
+              ".btn-cancelar"
+            );
+
+
+          botonCancelar.addEventListener(
+            "click",
+            async function() {
+
+              const confirmar =
+                confirm(
+                  `¿Seguro que quieres cancelar la reserva de ${reserva.nombre} a las ${horaInicio}?`
+                );
+
+              if (!confirmar) {
+
+                return;
+
+              }
+
+
+              await cancelarReserva(
+                reserva.id,
+                fecha,
+                botonCancelar
+              );
+
+            }
+          );
 
 
           reservasContainer.appendChild(
@@ -491,7 +499,13 @@ async function cargarReservas(
           );
 
 
-        } else {
+        }
+
+        // ==============================
+        // HORARIO DISPONIBLE
+        // ==============================
+
+        else {
 
           const card =
             document.createElement(
@@ -527,8 +541,87 @@ async function cargarReservas(
 
     reservasContainer.innerHTML =
       `<p class="error">
-        ${escapeHTML(error.message)}
+        ${escapeHTML(
+          error.message
+        )}
       </p>`;
+
+  }
+
+}
+
+
+// ==============================
+// CANCELAR RESERVA
+// ==============================
+
+async function cancelarReserva(
+  id,
+  fecha,
+  boton
+) {
+
+  const accessToken =
+    sessionStorage.getItem(
+      "admin_access_token"
+    );
+
+
+  boton.disabled = true;
+
+  boton.textContent =
+    "Cancelando...";
+
+
+  try {
+
+    const respuesta =
+      await fetch(
+        `${SUPABASE_URL}/rest/v1/reservas?id=eq.${id}`,
+        {
+          method: "DELETE",
+
+          headers:
+            headersSesion(
+              accessToken
+            )
+        }
+      );
+
+
+    if (!respuesta.ok) {
+
+      const resultado =
+        await respuesta.text();
+
+      console.error(
+        resultado
+      );
+
+      throw new Error(
+        "No se pudo cancelar la reserva."
+      );
+
+    }
+
+
+    // Volver a cargar la fecha
+    await cargarReservas(
+      fecha,
+      accessToken
+    );
+
+
+  } catch (error) {
+
+    alert(
+      error.message
+    );
+
+    boton.disabled = false;
+
+    boton.textContent =
+      "❌ Cancelar reserva";
 
   }
 
@@ -577,14 +670,12 @@ function formatearFecha(
   const partes =
     fecha.split("-");
 
-
   const fechaLocal =
     new Date(
       partes[0],
       partes[1] - 1,
       partes[2]
     );
-
 
   return fechaLocal.toLocaleDateString(
     "es-CO",
