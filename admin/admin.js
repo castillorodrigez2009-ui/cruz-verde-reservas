@@ -328,22 +328,21 @@ filtroAgenda.addEventListener(
     agendaSeleccionada =
       filtroAgenda.value;
 
-    const fecha =
-      fechaAdmin.value;
-
-    if (!fecha) {
-      return;
-    }
-
     const accessToken =
       sessionStorage.getItem(
         "admin_access_token"
       );
 
-    await cargarReservas(
-      fecha,
+    await cargarFechas(
       accessToken
     );
+
+    fechaAdmin.value = "";
+
+    limpiarPanel();
+
+  }
+);
 
   }
 );
@@ -352,10 +351,94 @@ filtroAgenda.addEventListener(
 // CARGAR RESERVAS
 // ==============================
 
-async function cargarReservas(
-  fecha,
+async function cargarFechas(
   accessToken
 ) {
+
+  try {
+
+    let url =
+      SUPABASE_URL +
+      "/rest/v1/horarios?select=fecha,agenda&activo=eq.true&order=fecha.asc";
+
+    if (
+      agendaSeleccionada !==
+      "todas"
+    ) {
+
+      url +=
+        "&agenda=eq." +
+        agendaSeleccionada;
+
+    }
+
+    const respuesta =
+      await fetch(
+        url,
+        {
+          headers:
+            headersSesion(
+              accessToken
+            )
+        }
+      );
+
+    if (!respuesta.ok) {
+
+      throw new Error(
+        "No se pudieron cargar las fechas."
+      );
+
+    }
+
+    const datos =
+      await respuesta.json();
+
+    const fechas = [
+      ...new Set(
+        datos.map(
+          function(item) {
+            return item.fecha;
+          }
+        )
+      )
+    ];
+
+    fechaAdmin.innerHTML =
+      '<option value="">Selecciona una fecha</option>';
+
+    fechas.forEach(
+      function(fecha) {
+
+        const option =
+          document.createElement(
+            "option"
+          );
+
+        option.value =
+          fecha;
+
+        option.textContent =
+          formatearFecha(
+            fecha
+          );
+
+        fechaAdmin.appendChild(
+          option
+        );
+
+      }
+    );
+
+  } catch (error) {
+
+    mostrarError(
+      error.message
+    );
+
+  }
+
+}
 
   reservasContainer.innerHTML =
     "<p>Cargando reservas...</p>";
