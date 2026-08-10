@@ -61,10 +61,8 @@ function headersSesion(accessToken) {
 
   return {
     "apikey": SUPABASE_KEY,
-    "Authorization":
-      "Bearer " + accessToken,
-    "Content-Type":
-      "application/json"
+    "Authorization": "Bearer " + accessToken,
+    "Content-Type": "application/json"
   };
 
 }
@@ -82,9 +80,7 @@ loginForm.addEventListener(
     ocultarError();
 
     btnLogin.disabled = true;
-
-    btnLogin.textContent =
-      "Ingresando...";
+    btnLogin.textContent = "Ingresando...";
 
     const email =
       emailInput.value.trim();
@@ -151,28 +147,17 @@ loginForm.addEventListener(
 
       }
 
-      login.classList.add(
-        "oculto"
-      );
+      login.classList.add("oculto");
+      panel.classList.remove("oculto");
 
-      panel.classList.remove(
-        "oculto"
-      );
-
-      await cargarFechas(
-        accessToken
-      );
+      await cargarFechas(accessToken);
 
     } catch (error) {
 
-      mostrarError(
-        error.message
-      );
+      mostrarError(error.message);
 
       btnLogin.disabled = false;
-
-      btnLogin.textContent =
-        "Ingresar";
+      btnLogin.textContent = "Ingresar";
 
     }
 
@@ -193,9 +178,7 @@ async function comprobarAdministrador(
       "/rest/v1/admins?select=id",
       {
         headers:
-          headersSesion(
-            accessToken
-          )
+          headersSesion(accessToken)
       }
     );
 
@@ -220,153 +203,16 @@ async function cargarFechas(
 
   try {
 
-    const respuesta =
-      await fetch(
-        SUPABASE_URL +
-        "/rest/v1/horarios?select=fecha&activo=eq.true&order=fecha.asc",
-        {
-          headers:
-            headersSesion(
-              accessToken
-            )
-        }
-      );
-
-    if (!respuesta.ok) {
-
-      throw new Error(
-        "No se pudieron cargar las fechas."
-      );
-
-    }
-
-    const datos =
-      await respuesta.json();
-
-    const fechas = [
-      ...new Set(
-        datos.map(function(item) {
-          return item.fecha;
-        })
-      )
-    ];
-
-    fechaAdmin.innerHTML =
-      '<option value="">Selecciona una fecha</option>';
-
-    fechas.forEach(
-      function(fecha) {
-
-        const option =
-          document.createElement(
-            "option"
-          );
-
-        option.value =
-          fecha;
-
-        option.textContent =
-          formatearFecha(fecha);
-
-        fechaAdmin.appendChild(
-          option
-        );
-
-      }
-    );
-
-  } catch (error) {
-
-    mostrarError(
-      error.message
-    );
-
-  }
-
-}
-
-// ==============================
-// CAMBIO DE FECHA
-// ==============================
-
-fechaAdmin.addEventListener(
-  "change",
-  async function() {
-
-    const fecha =
-      fechaAdmin.value;
-
-    if (!fecha) {
-
-      limpiarPanel();
-
-      return;
-
-    }
-
-    const accessToken =
-      sessionStorage.getItem(
-        "admin_access_token"
-      );
-
-    await cargarReservas(
-      fecha,
-      accessToken
-    );
-
-  }
-);
-
-// ==============================
-// CAMBIO DE AGENDA
-// ==============================
-
-filtroAgenda.addEventListener(
-  "change",
-  async function() {
-
-    agendaSeleccionada =
-      filtroAgenda.value;
-
-    const accessToken =
-      sessionStorage.getItem(
-        "admin_access_token"
-      );
-
-    await cargarFechas(
-      accessToken
-    );
-
-    fechaAdmin.value = "";
-
-    limpiarPanel();
-
-  }
-);
-
-  }
-);
-
-// ==============================
-// CARGAR RESERVAS
-// ==============================
-
-async function cargarFechas(
-  accessToken
-) {
-
-  try {
-
     let url =
       SUPABASE_URL +
       "/rest/v1/horarios?select=fecha,agenda&activo=eq.true&order=fecha.asc";
 
     if (
-      agendaSeleccionada !==
-      "todas"
+      agendaSeleccionada !== "todas"
     ) {
 
-      url +=
+      url =
+        url +
         "&agenda=eq." +
         agendaSeleccionada;
 
@@ -377,9 +223,7 @@ async function cargarFechas(
         url,
         {
           headers:
-            headersSesion(
-              accessToken
-            )
+            headersSesion(accessToken)
         }
       );
 
@@ -415,13 +259,10 @@ async function cargarFechas(
             "option"
           );
 
-        option.value =
-          fecha;
+        option.value = fecha;
 
         option.textContent =
-          formatearFecha(
-            fecha
-          );
+          formatearFecha(fecha);
 
         fechaAdmin.appendChild(
           option
@@ -432,13 +273,79 @@ async function cargarFechas(
 
   } catch (error) {
 
-    mostrarError(
-      error.message
-    );
+    mostrarError(error.message);
 
   }
 
 }
+
+// ==============================
+// CAMBIO DE AGENDA
+// ==============================
+
+filtroAgenda.addEventListener(
+  "change",
+  async function() {
+
+    agendaSeleccionada =
+      filtroAgenda.value;
+
+    const accessToken =
+      sessionStorage.getItem(
+        "admin_access_token"
+      );
+
+    fechaAdmin.value = "";
+
+    limpiarPanel();
+
+    await cargarFechas(
+      accessToken
+    );
+
+  }
+);
+
+// ==============================
+// CAMBIO DE FECHA
+// ==============================
+
+fechaAdmin.addEventListener(
+  "change",
+  async function() {
+
+    const fecha =
+      fechaAdmin.value;
+
+    if (!fecha) {
+
+      limpiarPanel();
+
+      return;
+
+    }
+
+    const accessToken =
+      sessionStorage.getItem(
+        "admin_access_token"
+      );
+
+    await cargarReservas(
+      fecha,
+      accessToken
+    );
+
+  }
+);
+
+// ==============================
+// CARGAR RESERVAS
+// ==============================
+
+async function cargarReservas(
+  fecha,
+  accessToken
+) {
 
   reservasContainer.innerHTML =
     "<p>Cargando reservas...</p>";
@@ -446,7 +353,7 @@ async function cargarFechas(
   try {
 
     // ==============================
-    // HORARIOS
+    // CARGAR HORARIOS
     // ==============================
 
     let urlHorarios =
@@ -456,11 +363,11 @@ async function cargarFechas(
       "&activo=eq.true&order=hora_inicio.asc";
 
     if (
-      agendaSeleccionada !==
-      "todas"
+      agendaSeleccionada !== "todas"
     ) {
 
-      urlHorarios +=
+      urlHorarios =
+        urlHorarios +
         "&agenda=eq." +
         agendaSeleccionada;
 
@@ -471,9 +378,7 @@ async function cargarFechas(
         urlHorarios,
         {
           headers:
-            headersSesion(
-              accessToken
-            )
+            headersSesion(accessToken)
         }
       );
 
@@ -489,7 +394,7 @@ async function cargarFechas(
       await respuestaHorarios.json();
 
     // ==============================
-    // RESERVAS
+    // CARGAR RESERVAS
     // ==============================
 
     let urlReservas =
@@ -499,11 +404,11 @@ async function cargarFechas(
       "&order=hora.asc";
 
     if (
-      agendaSeleccionada !==
-      "todas"
+      agendaSeleccionada !== "todas"
     ) {
 
-      urlReservas +=
+      urlReservas =
+        urlReservas +
         "&agenda=eq." +
         agendaSeleccionada;
 
@@ -514,9 +419,7 @@ async function cargarFechas(
         urlReservas,
         {
           headers:
-            headersSesion(
-              accessToken
-            )
+            headersSesion(accessToken)
         }
       );
 
@@ -531,11 +434,10 @@ async function cargarFechas(
     const reservas =
       await respuestaReservas.json();
 
-    reservasContainer.innerHTML =
-      "";
+    reservasContainer.innerHTML = "";
 
-    let reservasMostradas = 0;
-    let disponiblesMostrados = 0;
+    let cantidadReservas = 0;
+    let cantidadDisponibles = 0;
 
     // ==============================
     // MOSTRAR HORARIOS
@@ -597,12 +499,12 @@ async function cargarFechas(
         }
 
         // ==============================
-        // RESERVADO
+        // RESERVA OCUPADA
         // ==============================
 
         if (reserva) {
 
-          reservasMostradas++;
+          cantidadReservas++;
 
           const card =
             document.createElement(
@@ -692,12 +594,12 @@ async function cargarFechas(
         }
 
         // ==============================
-        // DISPONIBLE
+        // HORARIO DISPONIBLE
         // ==============================
 
         else {
 
-          disponiblesMostrados++;
+          cantidadDisponibles++;
 
           const card =
             document.createElement(
@@ -732,10 +634,10 @@ async function cargarFechas(
     );
 
     totalReservas.textContent =
-      reservasMostradas;
+      cantidadReservas;
 
     totalDisponibles.textContent =
-      disponiblesMostrados;
+      cantidadDisponibles;
 
     if (
       horarios.length === 0
@@ -822,8 +724,7 @@ async function cancelarReserva(
       error.message
     );
 
-    boton.disabled =
-      false;
+    boton.disabled = false;
 
     boton.textContent =
       "❌ Cancelar reserva";
