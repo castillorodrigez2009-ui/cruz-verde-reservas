@@ -4,7 +4,6 @@ const SUPABASE_URL =
 const SUPABASE_KEY =
   "sb_publishable_HG_VFr6DFRtjWcj_2fBnMA_oyV9tsGo";
 
-
 // ==============================
 // ELEMENTOS
 // ==============================
@@ -45,21 +44,63 @@ const totalReservas =
 const totalDisponibles =
   document.getElementById("totalDisponibles");
 
+// ==============================
+// FILTRO DE AGENDA
+// ==============================
+
+let agendaSeleccionada = "todas";
+
+const filtroAgenda =
+  document.getElementById("filtroAgenda");
+
+if (filtroAgenda) {
+
+  filtroAgenda.addEventListener(
+    "change",
+    async function() {
+
+      agendaSeleccionada =
+        filtroAgenda.value;
+
+      const fecha =
+        fechaAdmin.value;
+
+      if (!fecha) {
+        return;
+      }
+
+      const accessToken =
+        sessionStorage.getItem(
+          "admin_access_token"
+        );
+
+      await cargarReservas(
+        fecha,
+        accessToken
+      );
+
+    }
+  );
+
+}
 
 // ==============================
 // HEADERS
 // ==============================
 
-function headersSesion(accessToken) {
+function headersSesion(
+  accessToken
+) {
 
   return {
     "apikey": SUPABASE_KEY,
-    "Authorization": `Bearer ${accessToken}`,
-    "Content-Type": "application/json"
+    "Authorization":
+      "Bearer " + accessToken,
+    "Content-Type":
+      "application/json"
   };
 
 }
-
 
 // ==============================
 // INICIAR SESIÓN
@@ -74,6 +115,7 @@ loginForm.addEventListener(
     ocultarError();
 
     btnLogin.disabled = true;
+
     btnLogin.textContent =
       "Ingresando...";
 
@@ -87,7 +129,8 @@ loginForm.addEventListener(
 
       const respuesta =
         await fetch(
-          `${SUPABASE_URL}/auth/v1/token?grant_type=password`,
+          SUPABASE_URL +
+          "/auth/v1/token?grant_type=password",
           {
             method: "POST",
 
@@ -98,8 +141,8 @@ loginForm.addEventListener(
             },
 
             body: JSON.stringify({
-              email,
-              password
+              email: email,
+              password: password
             })
           }
         );
@@ -141,9 +184,13 @@ loginForm.addEventListener(
 
       }
 
-      login.classList.add("oculto");
+      login.classList.add(
+        "oculto"
+      );
 
-      panel.classList.remove("oculto");
+      panel.classList.remove(
+        "oculto"
+      );
 
       await cargarFechas(
         accessToken
@@ -155,7 +202,8 @@ loginForm.addEventListener(
         error.message
       );
 
-      btnLogin.disabled = false;
+      btnLogin.disabled =
+        false;
 
       btnLogin.textContent =
         "Ingresar";
@@ -164,7 +212,6 @@ loginForm.addEventListener(
 
   }
 );
-
 
 // ==============================
 // COMPROBAR ADMIN
@@ -176,17 +223,18 @@ async function comprobarAdministrador(
 
   const respuesta =
     await fetch(
-      `${SUPABASE_URL}/rest/v1/admins?select=id`,
+      SUPABASE_URL +
+      "/rest/v1/admins?select=id",
       {
         headers:
-          headersSesion(accessToken)
+          headersSesion(
+            accessToken
+          )
       }
     );
 
   if (!respuesta.ok) {
-
     return false;
-
   }
 
   const admins =
@@ -195,7 +243,6 @@ async function comprobarAdministrador(
   return admins.length > 0;
 
 }
-
 
 // ==============================
 // CARGAR FECHAS
@@ -209,7 +256,8 @@ async function cargarFechas(
 
     const respuesta =
       await fetch(
-        `${SUPABASE_URL}/rest/v1/horarios?select=fecha&activo=eq.true&order=fecha.asc`,
+        SUPABASE_URL +
+        "/rest/v1/horarios?select=fecha&activo=eq.true&order=fecha.asc",
         {
           headers:
             headersSesion(
@@ -229,22 +277,19 @@ async function cargarFechas(
     const datos =
       await respuesta.json();
 
-    const fechas =
-      [
-        ...new Set(
-          datos.map(
-            item => item.fecha
-          )
-        )
-      ];
+    const fechas = [
+      ...new Set(
+        datos.map(function(item) {
+          return item.fecha;
+        })
+      )
+    ];
 
     fechaAdmin.innerHTML =
-      `<option value="">
-        Selecciona una fecha
-      </option>`;
+      '<option value="">Selecciona una fecha</option>';
 
     fechas.forEach(
-      fecha => {
+      function(fecha) {
 
         const option =
           document.createElement(
@@ -255,9 +300,7 @@ async function cargarFechas(
           fecha;
 
         option.textContent =
-          formatearFecha(
-            fecha
-          );
+          formatearFecha(fecha);
 
         fechaAdmin.appendChild(
           option
@@ -276,7 +319,6 @@ async function cargarFechas(
 
 }
 
-
 // ==============================
 // CAMBIO DE FECHA
 // ==============================
@@ -291,9 +333,7 @@ fechaAdmin.addEventListener(
     if (!fecha) {
 
       reservasContainer.innerHTML =
-        `<p>
-          Selecciona una fecha.
-        </p>`;
+        "<p>Selecciona una fecha.</p>";
 
       totalReservas.textContent =
         "0";
@@ -318,7 +358,6 @@ fechaAdmin.addEventListener(
   }
 );
 
-
 // ==============================
 // CARGAR RESERVAS
 // ==============================
@@ -329,15 +368,34 @@ async function cargarReservas(
 ) {
 
   reservasContainer.innerHTML =
-    `<p>
-      Cargando reservas...
-    </p>`;
+    '<p>Cargando reservas...</p>';
 
   try {
 
+    // ==============================
+    // HORARIOS
+    // ==============================
+
+    let urlHorarios =
+      SUPABASE_URL +
+      "/rest/v1/horarios?select=hora_inicio,hora_fin,agenda&fecha=eq." +
+      fecha +
+      "&activo=eq.true&order=hora_inicio.asc";
+
+    if (
+      agendaSeleccionada !==
+      "todas"
+    ) {
+
+      urlHorarios +=
+        "&agenda=eq." +
+        agendaSeleccionada;
+
+    }
+
     const respuestaHorarios =
       await fetch(
-        `${SUPABASE_URL}/rest/v1/horarios?select=hora_inicio,hora_fin&fecha=eq.${fecha}&activo=eq.true&order=hora_inicio.asc`,
+        urlHorarios,
         {
           headers:
             headersSesion(
@@ -357,10 +415,30 @@ async function cargarReservas(
     const horarios =
       await respuestaHorarios.json();
 
+    // ==============================
+    // RESERVAS
+    // ==============================
+
+    let urlReservas =
+      SUPABASE_URL +
+      "/rest/v1/reservas?select=id,nombre,correo,telefono,fecha,hora,agenda&fecha=eq." +
+      fecha +
+      "&order=hora.asc";
+
+    if (
+      agendaSeleccionada !==
+      "todas"
+    ) {
+
+      urlReservas +=
+        "&agenda=eq." +
+        agendaSeleccionada;
+
+    }
 
     const respuestaReservas =
       await fetch(
-        `${SUPABASE_URL}/rest/v1/reservas?select=id,nombre,correo,telefono,fecha,hora&fecha=eq.${fecha}&order=hora.asc`,
+        urlReservas,
         {
           headers:
             headersSesion(
@@ -380,7 +458,6 @@ async function cargarReservas(
     const reservas =
       await respuestaReservas.json();
 
-
     reservasContainer.innerHTML =
       "";
 
@@ -391,9 +468,12 @@ async function cargarReservas(
       horarios.length -
       reservas.length;
 
+    // ==============================
+    // MOSTRAR HORARIOS
+    // ==============================
 
     horarios.forEach(
-      horario => {
+      function(horario) {
 
         const horaInicio =
           horario.hora_inicio.substring(
@@ -407,16 +487,47 @@ async function cargarReservas(
             5
           );
 
-
         const reserva =
           reservas.find(
-            item =>
-              item.hora.substring(
-                0,
-                5
-              ) === horaInicio
+            function(item) {
+
+              return (
+                item.hora.substring(
+                  0,
+                  5
+                ) === horaInicio
+                &&
+                item.agenda ===
+                  horario.agenda
+              );
+
+            }
           );
 
+        // ==============================
+        // NOMBRE DE AGENDA
+        // ==============================
+
+        let nombreAgenda =
+          horario.agenda;
+
+        if (
+          horario.agenda ===
+          "cruz_verde"
+        ) {
+
+          nombreAgenda =
+            "Cruz Verde";
+
+        } else if (
+          horario.agenda ===
+          "maribel"
+        ) {
+
+          nombreAgenda =
+            "Maribel";
+
+        }
 
         // ==============================
         // HORARIO OCUPADO
@@ -432,41 +543,52 @@ async function cargarReservas(
           card.className =
             "reserva-card ocupado";
 
+          card.innerHTML =
+            "<h3>" +
+            "🔴 " +
+            horaInicio +
+            " - " +
+            horaFin +
+            "</h3>" +
 
-          card.innerHTML = `
-            <h3>
-              🔴 ${horaInicio} - ${horaFin}
-            </h3>
+            "<p>" +
+            "<strong>Agenda:</strong> " +
+            escapeHTML(
+              nombreAgenda
+            ) +
+            "</p>" +
 
-            <p>
-              <strong>Nombre:</strong>
-              ${escapeHTML(reserva.nombre)}
-            </p>
+            "<p>" +
+            "<strong>Nombre:</strong> " +
+            escapeHTML(
+              reserva.nombre
+            ) +
+            "</p>" +
 
-            <p>
-              <strong>Correo:</strong>
-              ${escapeHTML(reserva.correo)}
-            </p>
+            "<p>" +
+            "<strong>Correo:</strong> " +
+            escapeHTML(
+              reserva.correo
+            ) +
+            "</p>" +
 
-            <p>
-              <strong>Teléfono:</strong>
-              ${escapeHTML(reserva.telefono)}
-            </p>
+            "<p>" +
+            "<strong>Teléfono:</strong> " +
+            escapeHTML(
+              reserva.telefono
+            ) +
+            "</p>" +
 
-            <button
-              class="btn-cancelar"
-              data-id="${reserva.id}"
-            >
-              ❌ Cancelar reserva
-            </button>
-          `;
-
+            '<button class="btn-cancelar" data-id="' +
+            reserva.id +
+            '">' +
+            "❌ Cancelar reserva" +
+            "</button>";
 
           const botonCancelar =
             card.querySelector(
               ".btn-cancelar"
             );
-
 
           botonCancelar.addEventListener(
             "click",
@@ -474,15 +596,16 @@ async function cargarReservas(
 
               const confirmar =
                 confirm(
-                  `¿Seguro que quieres cancelar la reserva de ${reserva.nombre} a las ${horaInicio}?`
+                  "¿Seguro que quieres cancelar la reserva de " +
+                  reserva.nombre +
+                  " a las " +
+                  horaInicio +
+                  "?"
                 );
 
               if (!confirmar) {
-
                 return;
-
               }
-
 
               await cancelarReserva(
                 reserva.id,
@@ -493,11 +616,9 @@ async function cargarReservas(
             }
           );
 
-
           reservasContainer.appendChild(
             card
           );
-
 
         }
 
@@ -515,17 +636,20 @@ async function cargarReservas(
           card.className =
             "disponible";
 
+          card.innerHTML =
+            "<strong>" +
+            "🟢 " +
+            horaInicio +
+            " - " +
+            horaFin +
+            "</strong>" +
 
-          card.innerHTML = `
-            <strong>
-              🟢 ${horaInicio} - ${horaFin}
-            </strong>
-
-            <span>
-              Disponible
-            </span>
-          `;
-
+            "<span>" +
+            escapeHTML(
+              nombreAgenda
+            ) +
+            " — Disponible" +
+            "</span>";
 
           reservasContainer.appendChild(
             card
@@ -536,20 +660,18 @@ async function cargarReservas(
       }
     );
 
-
   } catch (error) {
 
     reservasContainer.innerHTML =
-      `<p class="error">
-        ${escapeHTML(
-          error.message
-        )}
-      </p>`;
+      '<p class="error">' +
+      escapeHTML(
+        error.message
+      ) +
+      "</p>";
 
   }
 
 }
-
 
 // ==============================
 // CANCELAR RESERVA
@@ -566,18 +688,18 @@ async function cancelarReserva(
       "admin_access_token"
     );
 
-
   boton.disabled = true;
 
   boton.textContent =
     "Cancelando...";
 
-
   try {
 
     const respuesta =
       await fetch(
-        `${SUPABASE_URL}/rest/v1/reservas?id=eq.${id}`,
+        SUPABASE_URL +
+        "/rest/v1/reservas?id=eq." +
+        id,
         {
           method: "DELETE",
 
@@ -587,7 +709,6 @@ async function cancelarReserva(
             )
         }
       );
-
 
     if (!respuesta.ok) {
 
@@ -604,13 +725,10 @@ async function cancelarReserva(
 
     }
 
-
-    // Volver a cargar la fecha
     await cargarReservas(
       fecha,
       accessToken
     );
-
 
   } catch (error) {
 
@@ -618,7 +736,8 @@ async function cancelarReserva(
       error.message
     );
 
-    boton.disabled = false;
+    boton.disabled =
+      false;
 
     boton.textContent =
       "❌ Cancelar reserva";
@@ -626,7 +745,6 @@ async function cancelarReserva(
   }
 
 }
-
 
 // ==============================
 // CERRAR SESIÓN
@@ -651,13 +769,10 @@ btnCerrarSesion.addEventListener(
     loginForm.reset();
 
     reservasContainer.innerHTML =
-      `<p>
-        Selecciona una fecha.
-      </p>`;
+      "<p>Selecciona una fecha.</p>";
 
   }
 );
-
 
 // ==============================
 // FORMATEAR FECHA
@@ -689,7 +804,6 @@ function formatearFecha(
 
 }
 
-
 // ==============================
 // MOSTRAR ERROR
 // ==============================
@@ -707,7 +821,6 @@ function mostrarError(
 
 }
 
-
 // ==============================
 // OCULTAR ERROR
 // ==============================
@@ -719,7 +832,6 @@ function ocultarError() {
   );
 
 }
-
 
 // ==============================
 // SEGURIDAD HTML
