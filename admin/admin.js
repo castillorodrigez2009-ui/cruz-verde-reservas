@@ -1,8 +1,10 @@
+```javascript
 const SUPABASE_URL =
   "https://hnmyzfcjgdxjilzzpgue.supabase.co";
 
 const SUPABASE_KEY =
   "sb_publishable_HG_VFr6DFRtjWcj_2fBnMA_oyV9tsGo";
+
 
 // ==============================
 // ELEMENTOS
@@ -32,11 +34,11 @@ const loginError =
 const btnCerrarSesion =
   document.getElementById("btnCerrarSesion");
 
+const agendaAdmin =
+  document.getElementById("agendaAdmin");
+
 const fechaAdmin =
   document.getElementById("fechaAdmin");
-
-const filtroAgenda =
-  document.getElementById("filtroAgenda");
 
 const reservasContainer =
   document.getElementById("reservasContainer");
@@ -47,11 +49,13 @@ const totalReservas =
 const totalDisponibles =
   document.getElementById("totalDisponibles");
 
+
 // ==============================
 // VARIABLE DE AGENDA
 // ==============================
 
-let agendaSeleccionada = "todas";
+let agendaSeleccionada = "";
+
 
 // ==============================
 // HEADERS
@@ -67,6 +71,7 @@ function headersSesion(accessToken) {
 
 }
 
+
 // ==============================
 // INICIAR SESIÓN
 // ==============================
@@ -80,7 +85,8 @@ loginForm.addEventListener(
     ocultarError();
 
     btnLogin.disabled = true;
-    btnLogin.textContent = "Ingresando...";
+    btnLogin.textContent =
+      "Ingresando...";
 
     const email =
       emailInput.value.trim();
@@ -147,22 +153,34 @@ loginForm.addEventListener(
 
       }
 
-      login.classList.add("oculto");
-      panel.classList.remove("oculto");
+      login.classList.add(
+        "oculto"
+      );
 
-      await cargarFechas(accessToken);
+      panel.classList.remove(
+        "oculto"
+      );
+
+      await cargarAgendas(
+        accessToken
+      );
 
     } catch (error) {
 
-      mostrarError(error.message);
+      mostrarError(
+        error.message
+      );
 
       btnLogin.disabled = false;
-      btnLogin.textContent = "Ingresar";
+
+      btnLogin.textContent =
+        "Ingresar";
 
     }
 
   }
 );
+
 
 // ==============================
 // COMPROBAR ADMIN
@@ -178,12 +196,16 @@ async function comprobarAdministrador(
       "/rest/v1/admins?select=id",
       {
         headers:
-          headersSesion(accessToken)
+          headersSesion(
+            accessToken
+          )
       }
     );
 
   if (!respuesta.ok) {
+
     return false;
+
   }
 
   const admins =
@@ -193,8 +215,137 @@ async function comprobarAdministrador(
 
 }
 
+
 // ==============================
-// CARGAR FECHAS
+// CARGAR AGENDAS
+// ==============================
+
+async function cargarAgendas(
+  accessToken
+) {
+
+  try {
+
+    const respuesta =
+      await fetch(
+        SUPABASE_URL +
+        "/rest/v1/horarios?select=agenda&activo=eq.true",
+        {
+          headers:
+            headersSesion(
+              accessToken
+            )
+        }
+      );
+
+    if (!respuesta.ok) {
+
+      throw new Error(
+        "No se pudieron cargar las agendas."
+      );
+
+    }
+
+    const datos =
+      await respuesta.json();
+
+    const agendas = [
+      ...new Set(
+        datos.map(
+          function(item) {
+            return item.agenda;
+          }
+        )
+      )
+    ];
+
+    agendaAdmin.innerHTML =
+      '<option value="">Selecciona una agenda</option>';
+
+    agendas.forEach(
+      function(agenda) {
+
+        const option =
+          document.createElement(
+            "option"
+          );
+
+        option.value =
+          agenda;
+
+        option.textContent =
+          nombreAgenda(
+            agenda
+          );
+
+        agendaAdmin.appendChild(
+          option
+        );
+
+      }
+    );
+
+    fechaAdmin.innerHTML =
+      '<option value="">Primero selecciona una agenda</option>';
+
+    fechaAdmin.disabled = true;
+
+    limpiarPanel();
+
+  } catch (error) {
+
+    mostrarError(
+      error.message
+    );
+
+  }
+
+}
+
+
+// ==============================
+// CAMBIO DE AGENDA
+// ==============================
+
+agendaAdmin.addEventListener(
+  "change",
+  async function() {
+
+    agendaSeleccionada =
+      agendaAdmin.value;
+
+    const accessToken =
+      sessionStorage.getItem(
+        "admin_access_token"
+      );
+
+    fechaAdmin.value = "";
+
+    limpiarPanel();
+
+    if (!agendaSeleccionada) {
+
+      fechaAdmin.innerHTML =
+        '<option value="">Primero selecciona una agenda</option>';
+
+      fechaAdmin.disabled = true;
+
+      return;
+
+    }
+
+    fechaAdmin.disabled = false;
+
+    await cargarFechas(
+      accessToken
+    );
+
+  }
+);
+
+
+// ==============================
+// CARGAR FECHAS DE LA AGENDA
 // ==============================
 
 async function cargarFechas(
@@ -203,27 +354,17 @@ async function cargarFechas(
 
   try {
 
-    let url =
-      SUPABASE_URL +
-      "/rest/v1/horarios?select=fecha,agenda&activo=eq.true&order=fecha.asc";
-
-    if (
-      agendaSeleccionada !== "todas"
-    ) {
-
-      url =
-        url +
-        "&agenda=eq." +
-        agendaSeleccionada;
-
-    }
-
     const respuesta =
       await fetch(
-        url,
+        SUPABASE_URL +
+        "/rest/v1/horarios?select=fecha&agenda=eq." +
+        agendaSeleccionada +
+        "&activo=eq.true&order=fecha.asc",
         {
           headers:
-            headersSesion(accessToken)
+            headersSesion(
+              accessToken
+            )
         }
       );
 
@@ -259,10 +400,13 @@ async function cargarFechas(
             "option"
           );
 
-        option.value = fecha;
+        option.value =
+          fecha;
 
         option.textContent =
-          formatearFecha(fecha);
+          formatearFecha(
+            fecha
+          );
 
         fechaAdmin.appendChild(
           option
@@ -273,38 +417,14 @@ async function cargarFechas(
 
   } catch (error) {
 
-    mostrarError(error.message);
+    mostrarError(
+      error.message
+    );
 
   }
 
 }
 
-// ==============================
-// CAMBIO DE AGENDA
-// ==============================
-
-filtroAgenda.addEventListener(
-  "change",
-  async function() {
-
-    agendaSeleccionada =
-      filtroAgenda.value;
-
-    const accessToken =
-      sessionStorage.getItem(
-        "admin_access_token"
-      );
-
-    fechaAdmin.value = "";
-
-    limpiarPanel();
-
-    await cargarFechas(
-      accessToken
-    );
-
-  }
-);
 
 // ==============================
 // CAMBIO DE FECHA
@@ -338,6 +458,7 @@ fechaAdmin.addEventListener(
   }
 );
 
+
 // ==============================
 // CARGAR RESERVAS
 // ==============================
@@ -352,33 +473,25 @@ async function cargarReservas(
 
   try {
 
-    // ==============================
-    // CARGAR HORARIOS
-    // ==============================
-
-    let urlHorarios =
-      SUPABASE_URL +
-      "/rest/v1/horarios?select=hora_inicio,hora_fin,agenda&fecha=eq." +
-      fecha +
-      "&activo=eq.true&order=hora_inicio.asc";
-
-    if (
-      agendaSeleccionada !== "todas"
-    ) {
-
-      urlHorarios =
-        urlHorarios +
-        "&agenda=eq." +
-        agendaSeleccionada;
-
-    }
+    // ==========================
+    // HORARIOS
+    // ==========================
 
     const respuestaHorarios =
       await fetch(
-        urlHorarios,
+        SUPABASE_URL +
+        "/rest/v1/horarios?select=hora_inicio,hora_fin,agenda" +
+        "&fecha=eq." +
+        fecha +
+        "&agenda=eq." +
+        agendaSeleccionada +
+        "&activo=eq.true" +
+        "&order=hora_inicio.asc",
         {
           headers:
-            headersSesion(accessToken)
+            headersSesion(
+              accessToken
+            )
         }
       );
 
@@ -393,33 +506,25 @@ async function cargarReservas(
     const horarios =
       await respuestaHorarios.json();
 
-    // ==============================
-    // CARGAR RESERVAS
-    // ==============================
 
-    let urlReservas =
-      SUPABASE_URL +
-      "/rest/v1/reservas?select=id,nombre,correo,telefono,fecha,hora,agenda&fecha=eq." +
-      fecha +
-      "&order=hora.asc";
-
-    if (
-      agendaSeleccionada !== "todas"
-    ) {
-
-      urlReservas =
-        urlReservas +
-        "&agenda=eq." +
-        agendaSeleccionada;
-
-    }
+    // ==========================
+    // RESERVAS
+    // ==========================
 
     const respuestaReservas =
       await fetch(
-        urlReservas,
+        SUPABASE_URL +
+        "/rest/v1/reservas?select=id,nombre,correo,telefono,fecha,hora,agenda" +
+        "&fecha=eq." +
+        fecha +
+        "&agenda=eq." +
+        agendaSeleccionada +
+        "&order=hora.asc",
         {
           headers:
-            headersSesion(accessToken)
+            headersSesion(
+              accessToken
+            )
         }
       );
 
@@ -434,14 +539,18 @@ async function cargarReservas(
     const reservas =
       await respuestaReservas.json();
 
-    reservasContainer.innerHTML = "";
+
+    reservasContainer.innerHTML =
+      "";
 
     let cantidadReservas = 0;
+
     let cantidadDisponibles = 0;
 
-    // ==============================
+
+    // ==========================
     // MOSTRAR HORARIOS
-    // ==============================
+    // ==========================
 
     horarios.forEach(
       function(horario) {
@@ -458,6 +567,7 @@ async function cargarReservas(
             5
           );
 
+
         const reserva =
           reservas.find(
             function(item) {
@@ -467,40 +577,15 @@ async function cargarReservas(
                   0,
                   5
                 ) === horaInicio
-                &&
-                item.agenda ===
-                  horario.agenda
               );
 
             }
           );
 
-        let nombreAgenda =
-          horario.agenda;
 
-        if (
-          horario.agenda ===
-          "cruz_verde"
-        ) {
-
-          nombreAgenda =
-            "Cruz Verde";
-
-        }
-
-        if (
-          horario.agenda ===
-          "maribel"
-        ) {
-
-          nombreAgenda =
-            "Maribel";
-
-        }
-
-        // ==============================
-        // RESERVA OCUPADA
-        // ==============================
+        // ========================
+        // OCUPADO
+        // ========================
 
         if (reserva) {
 
@@ -525,7 +610,9 @@ async function cargarReservas(
             "<p>" +
             "<strong>Agenda:</strong> " +
             escapeHTML(
-              nombreAgenda
+              nombreAgenda(
+                agendaSeleccionada
+              )
             ) +
             "</p>" +
 
@@ -556,10 +643,12 @@ async function cargarReservas(
             "❌ Cancelar reserva" +
             "</button>";
 
+
           const botonCancelar =
             card.querySelector(
               ".btn-cancelar"
             );
+
 
           botonCancelar.addEventListener(
             "click",
@@ -575,7 +664,9 @@ async function cargarReservas(
                 );
 
               if (!confirmar) {
+
                 return;
+
               }
 
               await cancelarReserva(
@@ -587,15 +678,17 @@ async function cargarReservas(
             }
           );
 
+
           reservasContainer.appendChild(
             card
           );
 
         }
 
-        // ==============================
-        // HORARIO DISPONIBLE
-        // ==============================
+
+        // ========================
+        // DISPONIBLE
+        // ========================
 
         else {
 
@@ -618,8 +711,8 @@ async function cargarReservas(
             "</strong>" +
 
             "<span>" +
-            escapeHTML(
-              nombreAgenda
+            nombreAgenda(
+              agendaSeleccionada
             ) +
             " — Disponible" +
             "</span>";
@@ -633,11 +726,13 @@ async function cargarReservas(
       }
     );
 
+
     totalReservas.textContent =
       cantidadReservas;
 
     totalDisponibles.textContent =
       cantidadDisponibles;
+
 
     if (
       horarios.length === 0
@@ -660,6 +755,7 @@ async function cargarReservas(
   }
 
 }
+
 
 // ==============================
 // CANCELAR RESERVA
@@ -698,6 +794,7 @@ async function cancelarReserva(
         }
       );
 
+
     if (!respuesta.ok) {
 
       const resultado =
@@ -712,6 +809,7 @@ async function cancelarReserva(
       );
 
     }
+
 
     await cargarReservas(
       fecha,
@@ -733,6 +831,7 @@ async function cancelarReserva(
 
 }
 
+
 // ==============================
 // LIMPIAR PANEL
 // ==============================
@@ -749,6 +848,7 @@ function limpiarPanel() {
     "0";
 
 }
+
 
 // ==============================
 // CERRAR SESIÓN
@@ -772,10 +872,53 @@ btnCerrarSesion.addEventListener(
 
     loginForm.reset();
 
+    agendaSeleccionada = "";
+
+    agendaAdmin.value = "";
+
+    fechaAdmin.innerHTML =
+      '<option value="">Primero selecciona una agenda</option>';
+
+    fechaAdmin.disabled = true;
+
     limpiarPanel();
 
   }
 );
+
+
+// ==============================
+// NOMBRE DE LAS AGENDAS
+// ==============================
+
+function nombreAgenda(
+  agenda
+) {
+
+  if (agenda === "maribel") {
+
+    return "Maribel";
+
+  }
+
+  if (agenda === "rocio") {
+
+    return "Rocío";
+
+  }
+
+  if (
+    agenda === "cruz_verde"
+  ) {
+
+    return "Cruz Verde";
+
+  }
+
+  return agenda;
+
+}
+
 
 // ==============================
 // FORMATEAR FECHA
@@ -790,9 +933,9 @@ function formatearFecha(
 
   const fechaLocal =
     new Date(
-      partes[0],
-      partes[1] - 1,
-      partes[2]
+      Number(partes[0]),
+      Number(partes[1]) - 1,
+      Number(partes[2])
     );
 
   return fechaLocal.toLocaleDateString(
@@ -806,6 +949,7 @@ function formatearFecha(
   );
 
 }
+
 
 // ==============================
 // MOSTRAR ERROR
@@ -824,6 +968,7 @@ function mostrarError(
 
 }
 
+
 // ==============================
 // OCULTAR ERROR
 // ==============================
@@ -835,6 +980,7 @@ function ocultarError() {
   );
 
 }
+
 
 // ==============================
 // SEGURIDAD HTML
@@ -855,3 +1001,5 @@ function escapeHTML(
   return div.innerHTML;
 
 }
+```
+
