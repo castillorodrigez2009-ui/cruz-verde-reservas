@@ -4,12 +4,24 @@ const SUPABASE_URL =
 const SUPABASE_KEY =
   "sb_publishable_HG_VFr6DFRtjWcj_2fBnMA_oyV9tsGo";
 
-const AGENDA = "maribel";
+// ======================================================
+// AGENDA DE ROCÍO
+// ======================================================
+
+const AGENDA = "rocio";
+
+// ======================================================
+// HEADERS
+// ======================================================
 
 const headers = {
-  "apikey": SUPABASE_KEY,
+  apikey: SUPABASE_KEY,
   "Content-Type": "application/json"
 };
+
+// ======================================================
+// ELEMENTOS
+// ======================================================
 
 const fechasContainer =
   document.getElementById("fechas");
@@ -41,14 +53,16 @@ const errorBox =
 const detalleReserva =
   document.getElementById("detalleReserva");
 
+// ======================================================
+// VARIABLES
+// ======================================================
+
 let fechaSeleccionada = null;
 let horaSeleccionada = null;
-let horariosDisponibles = [];
 
-
-/* ==============================
-   CARGAR FECHAS
-================================ */
+// ======================================================
+// CARGAR FECHAS EXCLUSIVAMENTE DE ROCÍO
+// ======================================================
 
 async function cargarFechas() {
 
@@ -78,60 +92,76 @@ async function cargarFechas() {
 
     fechasContainer.innerHTML = "";
 
-    fechasUnicas.forEach(fecha => {
+    if (fechasUnicas.length === 0) {
 
-      const boton =
-        document.createElement("button");
+      fechasContainer.innerHTML =
+        `<p class="message">
+          No hay fechas disponibles.
+        </p>`;
 
-      boton.type = "button";
-      boton.className = "fecha-btn";
+      return;
+    }
 
-      boton.textContent =
-        formatearFecha(fecha);
+    fechasUnicas.forEach(
+      fecha => {
 
-      boton.addEventListener(
-        "click",
-        () => {
+        const boton =
+          document.createElement("button");
 
-          document
-            .querySelectorAll(".fecha-btn")
-            .forEach(btn =>
-              btn.classList.remove(
-                "selected"
-              )
+        boton.type = "button";
+
+        boton.className =
+          "fecha-btn";
+
+        boton.textContent =
+          formatearFecha(fecha);
+
+        boton.addEventListener(
+          "click",
+          () => {
+
+            document
+              .querySelectorAll(".fecha-btn")
+              .forEach(btn => {
+                btn.classList.remove(
+                  "selected"
+                );
+              });
+
+            boton.classList.add(
+              "selected"
             );
 
-          boton.classList.add(
-            "selected"
-          );
+            fechaSeleccionada =
+              fecha;
 
-          fechaSeleccionada =
-            fecha;
+            fechaSeleccionadaInput.value =
+              fecha;
 
-          fechaSeleccionadaInput.value =
-            fecha;
+            horaSeleccionada = null;
 
-          horaSeleccionada = null;
+            horaSeleccionadaInput.value =
+              "";
 
-          horaSeleccionadaInput.value =
-            "";
+            btnReservar.disabled =
+              true;
 
-          btnReservar.disabled =
-            true;
+            resumenTexto.textContent =
+              `${formatearFecha(fecha)} — selecciona un horario`;
 
-          resumenTexto.textContent =
-            `${formatearFecha(fecha)} — selecciona un horario`;
+            ocultarError();
 
-          cargarHorarios(fecha);
+            cargarHorarios(fecha);
 
-        }
-      );
+          }
+        );
 
-      fechasContainer.appendChild(
-        boton
-      );
+        fechasContainer.appendChild(
+          boton
+        );
 
-    });
+      }
+    );
 
   } catch (error) {
 
@@ -143,10 +173,9 @@ async function cargarFechas() {
 
 }
 
-
-/* ==============================
-   CARGAR HORARIOS
-================================ */
+// ======================================================
+// CARGAR HORARIOS EXCLUSIVAMENTE DE ROCÍO
+// ======================================================
 
 async function cargarHorarios(
   fecha
@@ -161,7 +190,7 @@ async function cargarHorarios(
 
     const respuesta =
       await fetch(
-        `${SUPABASE_URL}/rest/v1/horarios?select=hora_inicio,hora_fin&fecha=eq.${fecha}&agenda=eq.${AGENDA}&activo=eq.true&order=hora_inicio.asc`,
+        `${SUPABASE_URL}/rest/v1/horarios?select=hora_inicio,hora_fin&agenda=eq.${AGENDA}&fecha=eq.${fecha}&activo=eq.true&order=hora_inicio.asc`,
         {
           headers
         }
@@ -175,15 +204,13 @@ async function cargarHorarios(
 
     }
 
-    horariosDisponibles =
+    const horarios =
       await respuesta.json();
 
     horariosContainer.innerHTML =
       "";
 
-    if (
-      horariosDisponibles.length === 0
-    ) {
+    if (horarios.length === 0) {
 
       horariosContainer.innerHTML =
         `<p class="message">
@@ -191,21 +218,19 @@ async function cargarHorarios(
         </p>`;
 
       return;
-
     }
 
     const reservas =
       await cargarReservas(fecha);
 
-    horariosDisponibles.forEach(
+    horarios.forEach(
       horario => {
 
         const boton =
-          document.createElement(
-            "button"
-          );
+          document.createElement("button");
 
         boton.type = "button";
+
         boton.className =
           "hora-btn";
 
@@ -227,8 +252,10 @@ async function cargarHorarios(
         const ocupado =
           reservas.some(
             reserva =>
-              reserva.hora ===
-              horario.hora_inicio
+              reserva.hora.substring(
+                0,
+                5
+              ) === horaInicio
           );
 
         if (ocupado) {
@@ -253,11 +280,11 @@ async function cargarHorarios(
                 .querySelectorAll(
                   ".hora-btn"
                 )
-                .forEach(btn =>
+                .forEach(btn => {
                   btn.classList.remove(
                     "selected"
-                  )
-                );
+                  );
+                });
 
               boton.classList.add(
                 "selected"
@@ -297,10 +324,9 @@ async function cargarHorarios(
 
 }
 
-
-/* ==============================
-   CARGAR RESERVAS
-================================ */
+// ======================================================
+// CARGAR RESERVAS DE ROCÍO
+// ======================================================
 
 async function cargarReservas(
   fecha
@@ -308,7 +334,7 @@ async function cargarReservas(
 
   const respuesta =
     await fetch(
-      `${SUPABASE_URL}/rest/v1/reservas?select=hora&fecha=eq.${fecha}&agenda=eq.${AGENDA}`,
+      `${SUPABASE_URL}/rest/v1/reservas?select=hora&agenda=eq.${AGENDA}&fecha=eq.${fecha}`,
       {
         headers
       }
@@ -326,10 +352,9 @@ async function cargarReservas(
 
 }
 
-
-/* ==============================
-   CREAR RESERVA
-================================ */
+// ======================================================
+// CREAR RESERVA
+// ======================================================
 
 reservaForm.addEventListener(
   "submit",
@@ -347,7 +372,6 @@ reservaForm.addEventListener(
       );
 
       return;
-
     }
 
     btnReservar.disabled =
@@ -386,67 +410,71 @@ reservaForm.addEventListener(
 
             headers: {
               ...headers,
-              "Prefer":
-                "return=representation"
+              Prefer:
+                "return=minimal"
             },
 
             body: JSON.stringify({
-
               nombre,
-
               correo,
-
               telefono,
-
               fecha:
                 fechaSeleccionada,
-
               hora:
                 horaSeleccionada,
-
               agenda:
                 AGENDA
-
             })
-
           }
         );
 
-
       if (!respuesta.ok) {
 
-        const resultado =
-          await respuesta.json();
+        let resultado = {};
+
+        try {
+          resultado =
+            await respuesta.json();
+        } catch {
+          resultado = {};
+        }
+
+        const textoError =
+          JSON.stringify(resultado);
 
         if (
           respuesta.status === 409 ||
-          JSON.stringify(
-            resultado
-          ).includes(
-            "reserva_unica"
+          textoError.includes(
+            "reservas_fecha_hora_unique"
           )
         ) {
 
           throw new Error(
             "Ese horario acaba de ser reservado por otra persona. Selecciona otro horario."
           );
-
         }
 
-        console.error(
-          resultado
-        );
+        if (
+          respuesta.status === 401 ||
+          respuesta.status === 403 ||
+          textoError.includes(
+            "row-level security"
+          )
+        ) {
+
+          throw new Error(
+            "Supabase está bloqueando la creación de la reserva. Revisa los permisos de la tabla."
+          );
+        }
 
         throw new Error(
           "No fue posible guardar la reserva."
         );
-
       }
 
-
-      const reservaCreada =
-        await respuesta.json();
-
+      // ================================================
+      // RESERVA EXITOSA
+      // ================================================
 
       reservaForm.classList.add(
         "oculto"
@@ -474,12 +502,12 @@ reservaForm.addEventListener(
 
         <p>
           <strong>Nombre:</strong>
-          ${nombre}
+          ${escapeHTML(nombre)}
         </p>
 
         <p>
           <strong>Correo:</strong>
-          ${correo}
+          ${escapeHTML(correo)}
         </p>
       `;
 
@@ -500,10 +528,9 @@ reservaForm.addEventListener(
   }
 );
 
-
-/* ==============================
-   FORMATEAR FECHA
-================================ */
+// ======================================================
+// FORMATEAR FECHA
+// ======================================================
 
 function formatearFecha(
   fecha
@@ -514,9 +541,9 @@ function formatearFecha(
 
   const fechaLocal =
     new Date(
-      partes[0],
-      partes[1] - 1,
-      partes[2]
+      Number(partes[0]),
+      Number(partes[1]) - 1,
+      Number(partes[2])
     );
 
   return fechaLocal.toLocaleDateString(
@@ -531,10 +558,9 @@ function formatearFecha(
 
 }
 
-
-/* ==============================
-   MENSAJES DE ERROR
-================================ */
+// ======================================================
+// MOSTRAR ERROR
+// ======================================================
 
 function mostrarError(
   mensaje
@@ -549,6 +575,9 @@ function mostrarError(
 
 }
 
+// ======================================================
+// OCULTAR ERROR
+// ======================================================
 
 function ocultarError() {
 
@@ -558,9 +587,28 @@ function ocultarError() {
 
 }
 
+// ======================================================
+// SEGURIDAD HTML
+// ======================================================
 
-/* ==============================
-   INICIAR
-================================ */
+function escapeHTML(
+  texto
+) {
+
+  const div =
+    document.createElement(
+      "div"
+    );
+
+  div.textContent =
+    texto ?? "";
+
+  return div.innerHTML;
+
+}
+
+// ======================================================
+// INICIAR PÁGINA
+// ======================================================
 
 cargarFechas();
