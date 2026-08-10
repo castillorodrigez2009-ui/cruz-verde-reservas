@@ -1,1 +1,260 @@
+* {
+  box-sizing: border-box;
+}
 
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #f5f7f9;
+  color: #222;
+}
+
+/* ==============================
+   ENCABEZADO
+   ============================== */
+
+.header {
+  background: white;
+  padding: 18px 20px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.logo-container {
+  max-width: 1000px;
+  margin: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.logo {
+  font-size: 25px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+/* ==============================
+   CONTENIDO
+   ============================== */
+
+main {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+.intro {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.intro h1 {
+  margin-bottom: 10px;
+}
+
+.intro p {
+  color: #666;
+}
+
+/* ==============================
+   TARJETA
+   ============================== */
+
+.card {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* ==============================
+   PASOS
+   ============================== */
+
+.step {
+  margin-bottom: 35px;
+}
+
+.step h2 {
+  margin-bottom: 18px;
+  font-size: 20px;
+}
+
+/* ==============================
+   FECHAS
+   ============================== */
+
+.fechas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.fecha-btn {
+  border: 1px solid #ccc;
+  background: white;
+  padding: 12px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.fecha-btn:hover {
+  border-color: #222;
+}
+
+.fecha-btn.selected {
+  background: #222;
+  color: white;
+}
+
+/* ==============================
+   HORARIOS
+   ============================== */
+
+.horarios {
+  display: grid;
+  grid-template-columns:
+    repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.hora-btn {
+  border: 1px solid #ccc;
+  background: white;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.hora-btn:hover {
+  border-color: #222;
+}
+
+.hora-btn.selected {
+  background: #222;
+  color: white;
+}
+
+.hora-btn.ocupado {
+  background: #eee;
+  color: #999;
+  cursor: not-allowed;
+}
+
+/* ==============================
+   FORMULARIO
+   ============================== */
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+label {
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+input {
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 7px;
+  font-size: 15px;
+}
+
+input:focus {
+  outline: none;
+  border-color: #222;
+}
+
+/* ==============================
+   RESUMEN
+   ============================== */
+
+.resumen {
+  margin-top: 15px;
+  padding: 14px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  font-weight: bold;
+}
+
+/* ==============================
+   BOTÓN
+   ============================== */
+
+#btnReservar {
+  margin-top: 20px;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  background: #222;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+#btnReservar:disabled {
+  background: #aaa;
+  cursor: not-allowed;
+}
+
+/* ==============================
+   MENSAJES
+   ============================== */
+
+.loading,
+.message {
+  color: #666;
+}
+
+.error {
+  margin-top: 20px;
+  padding: 15px;
+  background: #ffe5e5;
+  color: #a00000;
+  border-radius: 8px;
+}
+
+.exito {
+  margin-top: 20px;
+  padding: 20px;
+  background: #e8f7e8;
+  border-radius: 10px;
+}
+
+.detalle-reserva {
+  margin-top: 15px;
+}
+
+/* ==============================
+   OCULTO
+   ============================== */
+
+.oculto {
+  display: none;
+}
+
+/* ==============================
+   CELULARES
+   ============================== */
+
+@media (max-width: 600px) {
+
+  main {
+    margin: 20px auto;
+    padding: 0 12px;
+  }
+
+  .card {
+    padding: 20px;
+  }
+
+  .horarios {
+    grid-template-columns: 1fr 1fr;
+  }
+
+}
