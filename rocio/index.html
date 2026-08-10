@@ -1,1 +1,221 @@
+```html
+<!DOCTYPE html>
+<html lang="es">
 
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Agenda tu reunión - Cruz Verde</title>
+
+  <link
+    rel="stylesheet"
+    href="./style.css"
+  >
+
+</head>
+
+<body>
+
+  <main class="container">
+
+    <section class="intro">
+
+      <h1>AGENDA TU REUNIÓN</h1>
+
+      <p>
+        Selecciona una fecha y un horario disponible
+        para programar tu reunión.
+      </p>
+
+    </section>
+
+
+    <section class="card">
+
+      <!-- PASO 1 -->
+      <div class="step">
+
+        <h2>1. SELECCIONA UNA FECHA</h2>
+
+        <div
+          id="fechas"
+          class="fechas"
+        >
+
+          <p class="loading">
+            Cargando fechas disponibles...
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <!-- PASO 2 -->
+      <div class="step">
+
+        <h2>2. SELECCIONA UN HORARIO</h2>
+
+        <div
+          id="horarios"
+          class="horarios"
+        >
+
+          <p class="message">
+            Primero selecciona una fecha.
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <!-- PASO 3 -->
+      <div class="step">
+
+        <h2>3. INGRESA TUS DATOS</h2>
+
+        <form id="reservaForm">
+
+          <div class="form-group">
+
+            <label for="nombre">
+              Nombre completo
+            </label>
+
+            <input
+              type="text"
+              id="nombre"
+              name="nombre"
+              placeholder="Escribe tu nombre completo"
+              autocomplete="name"
+              required
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label for="correo">
+              Correo electrónico
+            </label>
+
+            <input
+              type="email"
+              id="correo"
+              name="correo"
+              placeholder="ejemplo@correo.com"
+              autocomplete="email"
+              required
+            >
+
+          </div>
+
+
+          <div class="form-group">
+
+            <label for="telefono">
+              Teléfono
+            </label>
+
+            <input
+              type="tel"
+              id="telefono"
+              name="telefono"
+              placeholder="Número de teléfono"
+              autocomplete="tel"
+              required
+            >
+
+          </div>
+
+
+          <input
+            type="hidden"
+            id="fechaSeleccionada"
+            name="fecha"
+          >
+
+          <input
+            type="hidden"
+            id="horaSeleccionada"
+            name="hora"
+          >
+
+
+          <div
+            class="resumen"
+            id="resumen"
+          >
+
+            <strong>
+              Tu reserva:
+            </strong>
+
+            <p id="resumenTexto">
+              Selecciona una fecha y un horario.
+            </p>
+
+          </div>
+
+
+          <button
+            type="submit"
+            id="btnReservar"
+            disabled
+          >
+            Confirmar reserva
+          </button>
+
+        </form>
+
+      </div>
+
+
+      <!-- RESERVA EXITOSA -->
+      <div
+        id="exito"
+        class="exito oculto"
+      >
+
+        <div class="check">
+          ✓
+        </div>
+
+        <h2>
+          ¡Reserva confirmada!
+        </h2>
+
+        <p>
+          Tu reunión ha sido registrada correctamente.
+        </p>
+
+        <div id="detalleReserva"></div>
+
+      </div>
+
+
+      <!-- ERROR -->
+      <div
+        id="error"
+        class="error oculto"
+      ></div>
+
+    </section>
+
+  </main>
+
+
+  <script src="./script.js"></script>
+
+</body>
+
+</html>
+```
