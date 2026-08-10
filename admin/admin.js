@@ -35,6 +35,9 @@ const btnCerrarSesion =
 const fechaAdmin =
   document.getElementById("fechaAdmin");
 
+const filtroAgenda =
+  document.getElementById("filtroAgenda");
+
 const reservasContainer =
   document.getElementById("reservasContainer");
 
@@ -45,52 +48,16 @@ const totalDisponibles =
   document.getElementById("totalDisponibles");
 
 // ==============================
-// FILTRO DE AGENDA
+// VARIABLE DE AGENDA
 // ==============================
 
 let agendaSeleccionada = "todas";
-
-const filtroAgenda =
-  document.getElementById("filtroAgenda");
-
-if (filtroAgenda) {
-
-  filtroAgenda.addEventListener(
-    "change",
-    async function() {
-
-      agendaSeleccionada =
-        filtroAgenda.value;
-
-      const fecha =
-        fechaAdmin.value;
-
-      if (!fecha) {
-        return;
-      }
-
-      const accessToken =
-        sessionStorage.getItem(
-          "admin_access_token"
-        );
-
-      await cargarReservas(
-        fecha,
-        accessToken
-      );
-
-    }
-  );
-
-}
 
 // ==============================
 // HEADERS
 // ==============================
 
-function headersSesion(
-  accessToken
-) {
+function headersSesion(accessToken) {
 
   return {
     "apikey": SUPABASE_KEY,
@@ -202,8 +169,7 @@ loginForm.addEventListener(
         error.message
       );
 
-      btnLogin.disabled =
-        false;
+      btnLogin.disabled = false;
 
       btnLogin.textContent =
         "Ingresar";
@@ -332,17 +298,41 @@ fechaAdmin.addEventListener(
 
     if (!fecha) {
 
-      reservasContainer.innerHTML =
-        "<p>Selecciona una fecha.</p>";
-
-      totalReservas.textContent =
-        "0";
-
-      totalDisponibles.textContent =
-        "0";
+      limpiarPanel();
 
       return;
 
+    }
+
+    const accessToken =
+      sessionStorage.getItem(
+        "admin_access_token"
+      );
+
+    await cargarReservas(
+      fecha,
+      accessToken
+    );
+
+  }
+);
+
+// ==============================
+// CAMBIO DE AGENDA
+// ==============================
+
+filtroAgenda.addEventListener(
+  "change",
+  async function() {
+
+    agendaSeleccionada =
+      filtroAgenda.value;
+
+    const fecha =
+      fechaAdmin.value;
+
+    if (!fecha) {
+      return;
     }
 
     const accessToken =
@@ -368,7 +358,7 @@ async function cargarReservas(
 ) {
 
   reservasContainer.innerHTML =
-    '<p>Cargando reservas...</p>';
+    "<p>Cargando reservas...</p>";
 
   try {
 
@@ -461,12 +451,8 @@ async function cargarReservas(
     reservasContainer.innerHTML =
       "";
 
-    totalReservas.textContent =
-      reservas.length;
-
-    totalDisponibles.textContent =
-      horarios.length -
-      reservas.length;
+    let reservasMostradas = 0;
+    let disponiblesMostrados = 0;
 
     // ==============================
     // MOSTRAR HORARIOS
@@ -504,10 +490,6 @@ async function cargarReservas(
             }
           );
 
-        // ==============================
-        // NOMBRE DE AGENDA
-        // ==============================
-
         let nombreAgenda =
           horario.agenda;
 
@@ -519,7 +501,9 @@ async function cargarReservas(
           nombreAgenda =
             "Cruz Verde";
 
-        } else if (
+        }
+
+        if (
           horario.agenda ===
           "maribel"
         ) {
@@ -530,10 +514,12 @@ async function cargarReservas(
         }
 
         // ==============================
-        // HORARIO OCUPADO
+        // RESERVADO
         // ==============================
 
         if (reserva) {
+
+          reservasMostradas++;
 
           const card =
             document.createElement(
@@ -623,10 +609,12 @@ async function cargarReservas(
         }
 
         // ==============================
-        // HORARIO DISPONIBLE
+        // DISPONIBLE
         // ==============================
 
         else {
+
+          disponiblesMostrados++;
 
           const card =
             document.createElement(
@@ -659,6 +647,21 @@ async function cargarReservas(
 
       }
     );
+
+    totalReservas.textContent =
+      reservasMostradas;
+
+    totalDisponibles.textContent =
+      disponiblesMostrados;
+
+    if (
+      horarios.length === 0
+    ) {
+
+      reservasContainer.innerHTML =
+        "<p>No hay horarios para esta agenda en esta fecha.</p>";
+
+    }
 
   } catch (error) {
 
@@ -747,6 +750,23 @@ async function cancelarReserva(
 }
 
 // ==============================
+// LIMPIAR PANEL
+// ==============================
+
+function limpiarPanel() {
+
+  reservasContainer.innerHTML =
+    "<p>Selecciona una fecha.</p>";
+
+  totalReservas.textContent =
+    "0";
+
+  totalDisponibles.textContent =
+    "0";
+
+}
+
+// ==============================
 // CERRAR SESIÓN
 // ==============================
 
@@ -768,8 +788,7 @@ btnCerrarSesion.addEventListener(
 
     loginForm.reset();
 
-    reservasContainer.innerHTML =
-      "<p>Selecciona una fecha.</p>";
+    limpiarPanel();
 
   }
 );
