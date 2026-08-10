@@ -5,11 +5,10 @@ const SUPABASE_URL =
 const SUPABASE_KEY =
   "sb_publishable_HG_VFr6DFRtjWcj_2fBnMA_oyV9tsGo";
 
-// ESTA PÁGINA ES LA DE CRUZ VERDE
 const AGENDA = "cruz_verde";
 
 const headers = {
-  "apikey": SUPABASE_KEY,
+  apikey: SUPABASE_KEY,
   "Content-Type": "application/json"
 };
 
@@ -53,7 +52,6 @@ const detalleReserva =
 
 let fechaSeleccionada = null;
 let horaSeleccionada = null;
-
 
 // ==============================
 // CARGAR FECHAS
@@ -152,160 +150,118 @@ async function cargarFechas() {
 
 }
 
-
 // ==============================
 // CARGAR HORARIOS
 // ==============================
 
-async function cargarHorarios(
-  fecha
-) {
+async function cargarHorarios(fecha) {
 
   horariosContainer.innerHTML =
-    `<p class="loading">
-      Cargando horarios...
-    </p>`;
+    `<p class="loading">Cargando horarios...</p>`;
 
   try {
 
-    const respuesta =
-      await fetch(
-        `${SUPABASE_URL}/rest/v1/horarios?select=hora_inicio,hora_fin&fecha=eq.${fecha}&agenda=eq.${AGENDA}&activo=eq.true&order=hora_inicio.asc`,
-        {
-          headers
-        }
-      );
+    const respuesta = await fetch(
+      `${SUPABASE_URL}/rest/v1/horarios?select=hora_inicio,hora_fin&fecha=eq.${fecha}&agenda=eq.${AGENDA}&activo=eq.true&order=hora_inicio.asc`,
+      {
+        headers
+      }
+    );
 
     if (!respuesta.ok) {
-
       throw new Error(
         "No se pudieron cargar los horarios."
       );
-
     }
 
     const horarios =
       await respuesta.json();
 
-    horariosContainer.innerHTML =
-      "";
+    horariosContainer.innerHTML = "";
 
-    if (
-      horarios.length === 0
-    ) {
+    if (horarios.length === 0) {
 
       horariosContainer.innerHTML =
-        `<p class="message">
-          No hay horarios disponibles.
-        </p>`;
+        `<p class="message">No hay horarios disponibles.</p>`;
 
       return;
-
     }
 
-
-    // Consultamos únicamente
-    // las reservas de CRUZ VERDE
     const reservas =
       await cargarReservas(fecha);
 
+    horarios.forEach(horario => {
 
-    horarios.forEach(
-      horario => {
+      const boton =
+        document.createElement("button");
 
-        const boton =
-          document.createElement(
-            "button"
-          );
+      boton.type = "button";
+      boton.className = "hora-btn";
 
-        boton.type = "button";
+      const horaInicio =
+        horario.hora_inicio.substring(0, 5);
 
-        boton.className =
-          "hora-btn";
+      const horaFin =
+        horario.hora_fin.substring(0, 5);
 
-        const horaInicio =
-          horario.hora_inicio.substring(
-            0,
-            5
-          );
+      boton.textContent =
+        `${horaInicio} - ${horaFin}`;
 
-        const horaFin =
-          horario.hora_fin.substring(
-            0,
-            5
-          );
+      const ocupado =
+        reservas.some(
+          reserva =>
+            reserva.hora.substring(0, 5) ===
+            horaInicio
+        );
 
-        boton.textContent =
-          `${horaInicio} - ${horaFin}`;
+      if (ocupado) {
 
+        boton.classList.add("ocupado");
+        boton.disabled = true;
 
-        // Comprobar si el horario
-        // ya está ocupado EN CRUZ VERDE
-        const ocupado =
-          reservas.some(
-            reserva =>
-              reserva.hora.substring(
-                0,
-                5
-              ) === horaInicio
-          );
+        boton.textContent +=
+          " — Ocupado";
 
+      } else {
 
-        if (ocupado) {
+        boton.addEventListener(
+          "click",
+          () => {
 
-          boton.classList.add(
-            "ocupado"
-          );
+            document
+              .querySelectorAll(".hora-btn")
+              .forEach(btn => {
+                btn.classList.remove(
+                  "selected"
+                );
+              });
 
-          boton.disabled =
-            true;
+            boton.classList.add(
+              "selected"
+            );
 
-          boton.textContent +=
-            " — Ocupado";
+            horaSeleccionada =
+              horario.hora_inicio;
 
-        } else {
+            horaSeleccionadaInput.value =
+              horario.hora_inicio;
 
-          boton.addEventListener(
-            "click",
-            () => {
+            resumenTexto.textContent =
+              `${formatearFecha(fecha)} — ${horaInicio} a ${horaFin}`;
 
-              document
-                .querySelectorAll(
-                  ".hora-btn"
-                )
-                .forEach(btn => {
-                  btn.classList.remove(
-                    "selected"
-                  );
-                });
+            btnReservar.disabled =
+              false;
 
-              boton.classList.add(
-                "selected"
-              );
-
-              horaSeleccionada =
-                horario.hora_inicio;
-
-              horaSeleccionadaInput.value =
-                horario.hora_inicio;
-
-              resumenTexto.textContent =
-                `${formatearFecha(fecha)} — ${horaInicio} a ${horaFin}`;
-
-              btnReservar.disabled =
-                false;
-
-            }
-          );
-
-        }
-
-        horariosContainer.appendChild(
-          boton
+          }
         );
 
       }
-    );
+
+      horariosContainer.appendChild(
+        boton
+      );
+
+    });
 
   } catch (error) {
 
@@ -317,35 +273,28 @@ async function cargarHorarios(
 
 }
 
-
 // ==============================
-// CARGAR RESERVAS DE UNA FECHA
+// CARGAR RESERVAS
 // ==============================
 
-async function cargarReservas(
-  fecha
-) {
+async function cargarReservas(fecha) {
 
-  const respuesta =
-    await fetch(
-      `${SUPABASE_URL}/rest/v1/reservas?select=hora&fecha=eq.${fecha}&agenda=eq.${AGENDA}`,
-      {
-        headers
-      }
-    );
+  const respuesta = await fetch(
+    `${SUPABASE_URL}/rest/v1/reservas?select=hora&fecha=eq.${fecha}&agenda=eq.${AGENDA}`,
+    {
+      headers
+    }
+  );
 
   if (!respuesta.ok) {
-
     throw new Error(
       "No se pudieron consultar las reservas."
     );
-
   }
 
   return await respuesta.json();
 
 }
-
 
 // ==============================
 // CREAR RESERVA
@@ -357,7 +306,6 @@ reservaForm.addEventListener(
 
     event.preventDefault();
 
-
     if (
       !fechaSeleccionada ||
       !horaSeleccionada
@@ -368,18 +316,14 @@ reservaForm.addEventListener(
       );
 
       return;
-
     }
 
-
-    btnReservar.disabled =
-      true;
+    btnReservar.disabled = true;
 
     btnReservar.textContent =
       "Guardando reserva...";
 
     ocultarError();
-
 
     const nombre =
       document
@@ -399,70 +343,43 @@ reservaForm.addEventListener(
         .value
         .trim();
 
-
     try {
 
-      const respuesta =
-        await fetch(
-          `${SUPABASE_URL}/rest/v1/reservas`,
-          {
-            method: "POST",
+      const respuesta = await fetch(
+        `${SUPABASE_URL}/rest/v1/reservas`,
+        {
+          method: "POST",
 
-            headers: {
-              ...headers,
+          headers: {
+            ...headers,
+            "Prefer": "return=minimal"
+          },
 
-              "Prefer":
-                "return=minimal"
-            },
-
-            body: JSON.stringify({
-
-              nombre,
-
-              correo,
-
-              telefono,
-
-              fecha:
-                fechaSeleccionada,
-
-              hora:
-                horaSeleccionada,
-
-              // MUY IMPORTANTE:
-              // esta reserva pertenece
-              // a la agenda de Cruz Verde
-              agenda:
-                AGENDA
-
-            })
-          }
-        );
-
+          body: JSON.stringify({
+            nombre,
+            correo,
+            telefono,
+            fecha: fechaSeleccionada,
+            hora: horaSeleccionada,
+            agenda: AGENDA
+          })
+        }
+      );
 
       if (!respuesta.ok) {
 
         let resultado = {};
 
         try {
-
           resultado =
             await respuesta.json();
-
         } catch {
-
           resultado = {};
-
         }
 
-
         const textoError =
-          JSON.stringify(
-            resultado
-          );
+          JSON.stringify(resultado);
 
-
-        // Horario ya reservado
         if (
           respuesta.status === 409 ||
           textoError.includes(
@@ -476,8 +393,6 @@ reservaForm.addEventListener(
 
         }
 
-
-        // Error de permisos RLS
         if (
           respuesta.status === 401 ||
           respuesta.status === 403 ||
@@ -492,17 +407,11 @@ reservaForm.addEventListener(
 
         }
 
-
         throw new Error(
           "No fue posible guardar la reserva."
         );
 
       }
-
-
-      // ==============================
-      // RESERVA EXITOSA
-      // ==============================
 
       reservaForm.classList.add(
         "oculto"
@@ -512,21 +421,15 @@ reservaForm.addEventListener(
         "oculto"
       );
 
-
       detalleReserva.innerHTML = `
         <p>
           <strong>Fecha:</strong>
-          ${formatearFecha(
-            fechaSeleccionada
-          )}
+          ${formatearFecha(fechaSeleccionada)}
         </p>
 
         <p>
           <strong>Horario:</strong>
-          ${horaSeleccionada.substring(
-            0,
-            5
-          )}
+          ${horaSeleccionada.substring(0, 5)}
         </p>
 
         <p>
@@ -539,7 +442,6 @@ reservaForm.addEventListener(
           ${correo}
         </p>
       `;
-
 
     } catch (error) {
 
@@ -558,14 +460,11 @@ reservaForm.addEventListener(
   }
 );
 
-
 // ==============================
 // FORMATEAR FECHA
 // ==============================
 
-function formatearFecha(
-  fecha
-) {
+function formatearFecha(fecha) {
 
   const partes =
     fecha.split("-");
@@ -589,14 +488,11 @@ function formatearFecha(
 
 }
 
-
 // ==============================
 // MOSTRAR ERROR
 // ==============================
 
-function mostrarError(
-  mensaje
-) {
+function mostrarError(mensaje) {
 
   errorBox.textContent =
     mensaje;
@@ -606,7 +502,6 @@ function mostrarError(
   );
 
 }
-
 
 // ==============================
 // OCULTAR ERROR
@@ -620,11 +515,9 @@ function ocultarError() {
 
 }
 
-
 // ==============================
-// INICIAR PÁGINA
+// INICIAR
 // ==============================
 
 cargarFechas();
 ```
-
