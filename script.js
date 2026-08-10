@@ -1,4 +1,3 @@
-```javascript
 const SUPABASE_URL =
   "https://hnmyzfcjgdxjilzzpgue.supabase.co";
 
@@ -13,14 +12,11 @@ const headers = {
 };
 
 // ==============================
-// ELEMENTOS DE LA PÁGINA
+// ELEMENTOS
 // ==============================
 
-const fechasContainer =
-  document.getElementById("fechas");
-
-const horariosContainer =
-  document.getElementById("horarios");
+const fechasContainer = document.getElementById("fechas");
+const horariosContainer = document.getElementById("horarios");
 
 const fechaSeleccionadaInput =
   document.getElementById("fechaSeleccionada");
@@ -53,6 +49,7 @@ const detalleReserva =
 let fechaSeleccionada = null;
 let horaSeleccionada = null;
 
+
 // ==============================
 // CARGAR FECHAS
 // ==============================
@@ -61,10 +58,16 @@ async function cargarFechas() {
 
   try {
 
+    const url =
+      SUPABASE_URL +
+      "/rest/v1/horarios?select=fecha&agenda=eq." +
+      AGENDA +
+      "&activo=eq.true&order=fecha.asc";
+
     const respuesta = await fetch(
-      `${SUPABASE_URL}/rest/v1/horarios?select=fecha&agenda=eq.${AGENDA}&activo=eq.true&order=fecha.asc`,
+      url,
       {
-        headers
+        headers: headers
       }
     );
 
@@ -74,18 +77,19 @@ async function cargarFechas() {
       );
     }
 
-    const datos =
-      await respuesta.json();
+    const datos = await respuesta.json();
 
     const fechasUnicas = [
       ...new Set(
-        datos.map(item => item.fecha)
+        datos.map(function(item) {
+          return item.fecha;
+        })
       )
     ];
 
     fechasContainer.innerHTML = "";
 
-    fechasUnicas.forEach(fecha => {
+    fechasUnicas.forEach(function(fecha) {
 
       const boton =
         document.createElement("button");
@@ -98,57 +102,48 @@ async function cargarFechas() {
 
       boton.addEventListener(
         "click",
-        () => {
+        function() {
 
           document
             .querySelectorAll(".fecha-btn")
-            .forEach(btn => {
-              btn.classList.remove(
-                "selected"
-              );
+            .forEach(function(btn) {
+              btn.classList.remove("selected");
             });
 
-          boton.classList.add(
-            "selected"
-          );
+          boton.classList.add("selected");
 
-          fechaSeleccionada =
-            fecha;
+          fechaSeleccionada = fecha;
 
           fechaSeleccionadaInput.value =
             fecha;
 
           horaSeleccionada = null;
 
-          horaSeleccionadaInput.value =
-            "";
+          horaSeleccionadaInput.value = "";
 
-          btnReservar.disabled =
-            true;
+          btnReservar.disabled = true;
 
           resumenTexto.textContent =
-            `${formatearFecha(fecha)} — selecciona un horario`;
+            formatearFecha(fecha) +
+            " — selecciona un horario";
 
           cargarHorarios(fecha);
 
         }
       );
 
-      fechasContainer.appendChild(
-        boton
-      );
+      fechasContainer.appendChild(boton);
 
     });
 
   } catch (error) {
 
-    mostrarError(
-      error.message
-    );
+    mostrarError(error.message);
 
   }
 
 }
+
 
 // ==============================
 // CARGAR HORARIOS
@@ -157,21 +152,31 @@ async function cargarFechas() {
 async function cargarHorarios(fecha) {
 
   horariosContainer.innerHTML =
-    `<p class="loading">Cargando horarios...</p>`;
+    '<p class="loading">Cargando horarios...</p>';
 
   try {
 
+    const url =
+      SUPABASE_URL +
+      "/rest/v1/horarios?select=hora_inicio,hora_fin&fecha=eq." +
+      fecha +
+      "&agenda=eq." +
+      AGENDA +
+      "&activo=eq.true&order=hora_inicio.asc";
+
     const respuesta = await fetch(
-      `${SUPABASE_URL}/rest/v1/horarios?select=hora_inicio,hora_fin&fecha=eq.${fecha}&agenda=eq.${AGENDA}&activo=eq.true&order=hora_inicio.asc`,
+      url,
       {
-        headers
+        headers: headers
       }
     );
 
     if (!respuesta.ok) {
+
       throw new Error(
         "No se pudieron cargar los horarios."
       );
+
     }
 
     const horarios =
@@ -182,15 +187,16 @@ async function cargarHorarios(fecha) {
     if (horarios.length === 0) {
 
       horariosContainer.innerHTML =
-        `<p class="message">No hay horarios disponibles.</p>`;
+        '<p class="message">No hay horarios disponibles.</p>';
 
       return;
+
     }
 
     const reservas =
       await cargarReservas(fecha);
 
-    horarios.forEach(horario => {
+    horarios.forEach(function(horario) {
 
       const boton =
         document.createElement("button");
@@ -205,18 +211,22 @@ async function cargarHorarios(fecha) {
         horario.hora_fin.substring(0, 5);
 
       boton.textContent =
-        `${horaInicio} - ${horaFin}`;
+        horaInicio + " - " + horaFin;
 
       const ocupado =
-        reservas.some(
-          reserva =>
+        reservas.some(function(reserva) {
+
+          return (
             reserva.hora.substring(0, 5) ===
             horaInicio
-        );
+          );
+
+        });
 
       if (ocupado) {
 
         boton.classList.add("ocupado");
+
         boton.disabled = true;
 
         boton.textContent +=
@@ -226,19 +236,15 @@ async function cargarHorarios(fecha) {
 
         boton.addEventListener(
           "click",
-          () => {
+          function() {
 
             document
               .querySelectorAll(".hora-btn")
-              .forEach(btn => {
-                btn.classList.remove(
-                  "selected"
-                );
+              .forEach(function(btn) {
+                btn.classList.remove("selected");
               });
 
-            boton.classList.add(
-              "selected"
-            );
+            boton.classList.add("selected");
 
             horaSeleccionada =
               horario.hora_inicio;
@@ -247,31 +253,31 @@ async function cargarHorarios(fecha) {
               horario.hora_inicio;
 
             resumenTexto.textContent =
-              `${formatearFecha(fecha)} — ${horaInicio} a ${horaFin}`;
+              formatearFecha(fecha) +
+              " — " +
+              horaInicio +
+              " a " +
+              horaFin;
 
-            btnReservar.disabled =
-              false;
+            btnReservar.disabled = false;
 
           }
         );
 
       }
 
-      horariosContainer.appendChild(
-        boton
-      );
+      horariosContainer.appendChild(boton);
 
     });
 
   } catch (error) {
 
-    mostrarError(
-      error.message
-    );
+    mostrarError(error.message);
 
   }
 
 }
+
 
 // ==============================
 // CARGAR RESERVAS
@@ -279,22 +285,33 @@ async function cargarHorarios(fecha) {
 
 async function cargarReservas(fecha) {
 
-  const respuesta = await fetch(
-    `${SUPABASE_URL}/rest/v1/reservas?select=hora&fecha=eq.${fecha}&agenda=eq.${AGENDA}`,
-    {
-      headers
-    }
-  );
+  const url =
+    SUPABASE_URL +
+    "/rest/v1/reservas?select=hora&fecha=eq." +
+    fecha +
+    "&agenda=eq." +
+    AGENDA;
+
+  const respuesta =
+    await fetch(
+      url,
+      {
+        headers: headers
+      }
+    );
 
   if (!respuesta.ok) {
+
     throw new Error(
       "No se pudieron consultar las reservas."
     );
+
   }
 
   return await respuesta.json();
 
 }
+
 
 // ==============================
 // CREAR RESERVA
@@ -316,6 +333,7 @@ reservaForm.addEventListener(
       );
 
       return;
+
     }
 
     btnReservar.disabled = true;
@@ -345,36 +363,42 @@ reservaForm.addEventListener(
 
     try {
 
-      const respuesta = await fetch(
-        `${SUPABASE_URL}/rest/v1/reservas`,
-        {
-          method: "POST",
+      const respuesta =
+        await fetch(
+          SUPABASE_URL +
+          "/rest/v1/reservas",
+          {
+            method: "POST",
 
-          headers: {
-            ...headers,
-            "Prefer": "return=minimal"
-          },
+            headers: {
+              ...headers,
+              "Prefer": "return=minimal"
+            },
 
-          body: JSON.stringify({
-            nombre,
-            correo,
-            telefono,
-            fecha: fechaSeleccionada,
-            hora: horaSeleccionada,
-            agenda: AGENDA
-          })
-        }
-      );
+            body: JSON.stringify({
+              nombre: nombre,
+              correo: correo,
+              telefono: telefono,
+              fecha: fechaSeleccionada,
+              hora: horaSeleccionada,
+              agenda: AGENDA
+            })
+          }
+        );
 
       if (!respuesta.ok) {
 
         let resultado = {};
 
         try {
+
           resultado =
             await respuesta.json();
+
         } catch {
+
           resultado = {};
+
         }
 
         const textoError =
@@ -413,44 +437,32 @@ reservaForm.addEventListener(
 
       }
 
-      reservaForm.classList.add(
-        "oculto"
-      );
+      reservaForm.classList.add("oculto");
 
-      exito.classList.remove(
-        "oculto"
-      );
+      exito.classList.remove("oculto");
 
-      detalleReserva.innerHTML = `
-        <p>
-          <strong>Fecha:</strong>
-          ${formatearFecha(fechaSeleccionada)}
-        </p>
+      detalleReserva.innerHTML =
+        "<p><strong>Fecha:</strong> " +
+        formatearFecha(fechaSeleccionada) +
+        "</p>" +
 
-        <p>
-          <strong>Horario:</strong>
-          ${horaSeleccionada.substring(0, 5)}
-        </p>
+        "<p><strong>Horario:</strong> " +
+        horaSeleccionada.substring(0, 5) +
+        "</p>" +
 
-        <p>
-          <strong>Nombre:</strong>
-          ${nombre}
-        </p>
+        "<p><strong>Nombre:</strong> " +
+        nombre +
+        "</p>" +
 
-        <p>
-          <strong>Correo:</strong>
-          ${correo}
-        </p>
-      `;
+        "<p><strong>Correo:</strong> " +
+        correo +
+        "</p>";
 
     } catch (error) {
 
-      mostrarError(
-        error.message
-      );
+      mostrarError(error.message);
 
-      btnReservar.disabled =
-        false;
+      btnReservar.disabled = false;
 
       btnReservar.textContent =
         "Confirmar reserva";
@@ -459,6 +471,7 @@ reservaForm.addEventListener(
 
   }
 );
+
 
 // ==============================
 // FORMATEAR FECHA
@@ -488,6 +501,7 @@ function formatearFecha(fecha) {
 
 }
 
+
 // ==============================
 // MOSTRAR ERROR
 // ==============================
@@ -497,11 +511,10 @@ function mostrarError(mensaje) {
   errorBox.textContent =
     mensaje;
 
-  errorBox.classList.remove(
-    "oculto"
-  );
+  errorBox.classList.remove("oculto");
 
 }
+
 
 // ==============================
 // OCULTAR ERROR
@@ -509,15 +522,13 @@ function mostrarError(mensaje) {
 
 function ocultarError() {
 
-  errorBox.classList.add(
-    "oculto"
-  );
+  errorBox.classList.add("oculto");
 
 }
+
 
 // ==============================
 // INICIAR
 // ==============================
 
 cargarFechas();
-```
