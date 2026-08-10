@@ -1,1 +1,300 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background: #f4f7f6;
+  color: #263238;
+  min-height: 100vh;
+}
+
+/* HEADER */
+
+.header {
+  background: #00843d;
+  color: white;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.logo-container {
+  max-width: 1000px;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.logo {
+  width: 120px;
+  height: auto;
+}
+
+.logo-container span {
+  font-size: 15px;
+  opacity: 0.9;
+}
+
+/* CONTENEDOR */
+
+.container {
+  max-width: 900px;
+  margin: 45px auto;
+  padding: 0 20px;
+}
+
+/* INTRO */
+
+.intro {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.intro h1 {
+  font-size: 34px;
+  margin-bottom: 10px;
+  color: #006b32;
+}
+
+.intro p {
+  color: #657276;
+  font-size: 17px;
+}
+
+/* CARD */
+
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 35px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+}
+
+/* STEPS */
+
+.step {
+  margin-bottom: 35px;
+}
+
+.step h2 {
+  font-size: 20px;
+  margin-bottom: 18px;
+  color: #263238;
+}
+
+/* FECHAS */
+
+.fechas {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+
+.fecha-btn {
+  background: white;
+  border: 2px solid #d5dfdb;
+  border-radius: 10px;
+  padding: 18px 10px;
+  cursor: pointer;
+  transition: 0.2s;
+  font-size: 15px;
+}
+
+.fecha-btn:hover {
+  border-color: #00843d;
+}
+
+.fecha-btn.selected {
+  background: #00843d;
+  color: white;
+  border-color: #00843d;
+}
+
+/* HORARIOS */
+
+.horarios {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.hora-btn {
+  padding: 14px 8px;
+  border: 2px solid #d5dfdb;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+  font-size: 14px;
+}
+
+.hora-btn:hover {
+  border-color: #00843d;
+}
+
+.hora-btn.selected {
+  background: #00843d;
+  color: white;
+  border-color: #00843d;
+}
+
+.hora-btn.ocupado {
+  background: #eeeeee;
+  color: #999;
+  border-color: #dddddd;
+  cursor: not-allowed;
+}
+
+/* FORMULARIO */
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 13px;
+  border: 1px solid #ccd5d1;
+  border-radius: 7px;
+  font-size: 15px;
+  outline: none;
+}
+
+.form-group input:focus {
+  border-color: #00843d;
+}
+
+/* RESUMEN */
+
+.resumen {
+  background: #f0f7f3;
+  border-left: 4px solid #00843d;
+  padding: 15px;
+  margin: 25px 0;
+  border-radius: 5px;
+}
+
+.resumen p {
+  margin-top: 5px;
+}
+
+/* BOTON */
+
+#btnReservar {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: 8px;
+  background: #00843d;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+#btnReservar:hover:not(:disabled) {
+  background: #006b32;
+}
+
+#btnReservar:disabled {
+  background: #b9c5c0;
+  cursor: not-allowed;
+}
+
+/* MENSAJES */
+
+.message,
+.loading {
+  color: #6d7975;
+  text-align: center;
+  padding: 20px;
+}
+
+.error {
+  background: #fdecec;
+  color: #a12626;
+  border: 1px solid #e1aaaa;
+  padding: 15px;
+  border-radius: 7px;
+  margin-top: 20px;
+}
+
+.exito {
+  text-align: center;
+  padding: 30px;
+  background: #f0f7f3;
+  border-radius: 10px;
+}
+
+.check {
+  width: 55px;
+  height: 55px;
+  margin: 0 auto 15px;
+  border-radius: 50%;
+  background: #00843d;
+  color: white;
+  font-size: 35px;
+  line-height: 55px;
+}
+
+.exito h2 {
+  color: #006b32;
+  margin-bottom: 10px;
+}
+
+.oculto {
+  display: none;
+}
+
+/* FOOTER */
+
+footer {
+  text-align: center;
+  padding: 25px;
+  color: #7a8582;
+  font-size: 13px;
+}
+
+/* CELULARES */
+
+@media (max-width: 650px) {
+
+  .container {
+    margin: 25px auto;
+  }
+
+  .card {
+    padding: 22px;
+  }
+
+  .logo-container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .intro h1 {
+    font-size: 28px;
+  }
+
+  .fechas {
+    grid-template-columns: 1fr;
+  }
+
+  .horarios {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+}
